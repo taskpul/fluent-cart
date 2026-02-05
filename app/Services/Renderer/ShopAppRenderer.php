@@ -284,9 +284,10 @@ class ShopAppRenderer
     public function renderToolbarResults()
     {
         $total = $this->total;
-        $currentPage = $this->products->currentPage();
-        $from = $total ? ($currentPage - 1) * $this->per_page + 1 : 0;
-        $to = $total ? min($total, $currentPage * $this->per_page) : 0;
+        $currentPage = $this->getCurrentPage();
+        $perPage = $this->getPerPage();
+        $from = $total ? ($currentPage - 1) * $perPage + 1 : 0;
+        $to = $total ? min($total, $currentPage * $perPage) : 0;
         ?>
         <div class="wm-fc-shop__results"
              role="status"
@@ -587,10 +588,10 @@ class ShopAppRenderer
     {
         $total = $this->total;
         $lastPage = max((int)ceil($total / $this->per_page), 1);
-        $currentPage = $this->products->currentPage();
-        $from = ($currentPage - 1) * $this->per_page + 1;
-        $to = min($total, $currentPage * $this->per_page);
-        $perPage = $this->products->perPage();
+        $currentPage = $this->getCurrentPage();
+        $perPage = $this->getPerPage();
+        $from = ($currentPage - 1) * $perPage + 1;
+        $to = min($total, $currentPage * $perPage);
         ?>
         <div class="fct-shop-paginator">
             <?php $this->renderPaginatorResultWrapper(); ?>
@@ -606,10 +607,10 @@ class ShopAppRenderer
         $total = $this->total;
 
         $lastPage = max((int)ceil($total / $this->per_page), 1);
-        $currentPage = $this->products->currentPage();
-        $from = ($currentPage - 1) * $this->per_page + 1;
-        $to = min($total, $currentPage * $this->per_page);
-        $perPage = $this->products->perPage();
+        $currentPage = $this->getCurrentPage();
+        $perPage = $this->getPerPage();
+        $from = ($currentPage - 1) * $perPage + 1;
+        $to = min($total, $currentPage * $perPage);
         ?>
         <div class="fct-shop-paginator-result-wrapper" aria-label="<?php echo esc_attr__('Pagination information', 'fluent-cart'); ?>">
             <div
@@ -656,10 +657,10 @@ class ShopAppRenderer
     {
         $total = $this->total;
         $lastPage = max((int)ceil($total / $this->per_page), 1);
-        $currentPage = $this->products->currentPage();
-        $from = ($currentPage - 1) * $this->per_page + 1;
-        $to = min($total, $currentPage * $this->per_page);
-        $perPage = $this->products->perPage();
+        $currentPage = $this->getCurrentPage();
+        $perPage = $this->getPerPage();
+        $from = ($currentPage - 1) * $perPage + 1;
+        $to = min($total, $currentPage * $perPage);
 
         if ($lastPage > 1) : ?>
         <ul class="fct-shop-paginator-pager"
@@ -682,6 +683,24 @@ class ShopAppRenderer
         </ul>
         <?php
         endif;
+    }
+
+    private function getCurrentPage()
+    {
+        if (is_object($this->products) && method_exists($this->products, 'currentPage')) {
+            return max((int)$this->products->currentPage(), 1);
+        }
+
+        return 1;
+    }
+
+    private function getPerPage()
+    {
+        if (is_object($this->products) && method_exists($this->products, 'perPage')) {
+            return max((int)$this->products->perPage(), 1);
+        }
+
+        return max((int)$this->per_page, 1);
     }
 
 }
