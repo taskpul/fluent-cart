@@ -606,7 +606,7 @@ class CheckoutRenderer
 
     protected function getOrderNoteSettings(): array
     {
-        $cartItems = Arr::get($this->cart->cart_data, []);
+        $cartItems = $this->cart->cart_data ?? [];
         if (empty($cartItems)) {
             return [
                 'enabled' => false,
