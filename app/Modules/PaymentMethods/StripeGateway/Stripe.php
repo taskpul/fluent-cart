@@ -175,10 +175,31 @@ class Stripe extends AbstractPaymentGateway
     public static function beforeSettingsUpdate($data, $oldSettings): array
     {
         $provider = Arr::get($data, 'provider', 'connect');
-        $mode = Arr::get($data, 'payment_mode', 'test');
 
-        if ('connect' == $provider) {
-            $data[$mode . '_secret_key'] = Helper::encryptKey(Arr::get($data, $mode . '_secret_key'));
+        $fillableKeys = [
+            'test_publishable_key',
+            'test_secret_key',
+            'test_webhook_secret',
+            'live_publishable_key',
+            'live_secret_key',
+            'live_webhook_secret',
+        ];
+
+        foreach ($fillableKeys as $key) {
+            if (empty(Arr::get($data, $key)) && !empty(Arr::get($oldSettings, $key))) {
+                $data[$key] = Arr::get($oldSettings, $key);
+            }
+        }
+
+        if (in_array($provider, ['connect', 'manual'], true)) {
+            foreach (['test', 'live'] as $keyMode) {
+                if (!empty(Arr::get($data, $keyMode . '_secret_key'))) {
+                    $data[$keyMode . '_secret_key'] = Helper::encryptKey(Arr::get($data, $keyMode . '_secret_key'));
+                }
+                if (!empty(Arr::get($data, $keyMode . '_webhook_secret'))) {
+                    $data[$keyMode . '_webhook_secret'] = Helper::encryptKey(Arr::get($data, $keyMode . '_webhook_secret'));
+                }
+            }
         }
 
         if (Arr::get($data, 'provider') === 'api_keys') {
@@ -186,6 +207,8 @@ class Stripe extends AbstractPaymentGateway
             $data['live_publishable_key'] = '';
             $data['test_secret_key'] = '';
             $data['live_secret_key'] = '';
+            $data['test_webhook_secret'] = '';
+            $data['live_webhook_secret'] = '';
         }
 
         return $data;
@@ -196,7 +219,7 @@ class Stripe extends AbstractPaymentGateway
         $mode = Arr::get($data, 'payment_mode', 'test');
         $provider = Arr::get($data, 'provider', 'connect');
 
-        if ($provider === 'api_keys') {
+        if ($provider === 'api_keys' || $provider === 'manual') {
             if ($mode === 'live') {
                 $sk = defined('FCT_STRIPE_LIVE_SECRET_KEY') ? FCT_STRIPE_LIVE_SECRET_KEY : Arr::get($data, 'live_secret_key');
             } else {
@@ -216,6 +239,10 @@ class Stripe extends AbstractPaymentGateway
                     'message' => __('Stripe account already verified!', 'fluent-cart')
                 ];
             }
+        }
+
+        if ($sk && Helper::isValueEncrypted($sk)) {
+            $sk = Helper::decryptKey($sk);
         }
 
         if (empty($sk)) {
@@ -261,6 +288,13 @@ class Stripe extends AbstractPaymentGateway
 
     public function fields(): array
     {
+        $connectDisabled = apply_filters('fluent_cart_form_disable_stripe_connect', false, []);
+        $provider = $this->settings->get('provider');
+        if ($connectDisabled && $provider === 'connect') {
+            $provider = 'manual';
+        }
+        $providerLocked = $provider === 'api_keys';
+
         return array(
             'notice'              => [
                 'value' => $this->renderStoreModeNotice(),
@@ -274,20 +308,98 @@ class Stripe extends AbstractPaymentGateway
                         'type'   => 'tab',
                         'label'  => __('Live credentials', 'fluent-cart'),
                         'value'  => 'live',
-                        'schema' => []
+                        'schema' => [
+                            'live_publishable_key' => [
+                                'value'       => '',
+                                'label'       => __('Live Publishable Key', 'fluent-cart'),
+                                'type'        => 'text',
+                                'placeholder' => __('pk_live_xxxxxxxxxxxxxxxxxxxxx', 'fluent-cart'),
+                                'description' => __('Used for rendering Stripe Elements on the checkout.', 'fluent-cart'),
+                                'depends_on'  => [
+                                    'provider' => 'manual'
+                                ]
+                            ],
+                            'live_secret_key'      => [
+                                'value'       => '',
+                                'label'       => __('Live Secret Key', 'fluent-cart'),
+                                'type'        => 'password',
+                                'placeholder' => __('sk_live_xxxxxxxxxxxxxxxxxxxxx', 'fluent-cart'),
+                                'description' => __('Used for server-to-server API calls and stored securely.', 'fluent-cart'),
+                                'depends_on'  => [
+                                    'provider' => 'manual'
+                                ]
+                            ],
+                            'live_webhook_secret'  => [
+                                'value'       => '',
+                                'label'       => __('Live Webhook Signing Secret', 'fluent-cart'),
+                                'type'        => 'password',
+                                'placeholder' => __('whsec_xxxxxxxxxxxxxxxxxxxxx', 'fluent-cart'),
+                                'description' => __('Used to verify webhook signatures from Stripe.', 'fluent-cart'),
+                                'depends_on'  => [
+                                    'provider' => 'manual'
+                                ]
+                            ],
+                        ]
                     ],
                     [
                         'type'   => 'tab',
                         'label'  => __('Test credentials', 'fluent-cart'),
                         'value'  => 'test',
-                        'schema' => [],
+                        'schema' => [
+                            'test_publishable_key' => [
+                                'value'       => '',
+                                'label'       => __('Test Publishable Key', 'fluent-cart'),
+                                'type'        => 'text',
+                                'placeholder' => __('pk_test_xxxxxxxxxxxxxxxxxxxxx', 'fluent-cart'),
+                                'description' => __('Used for rendering Stripe Elements on the checkout.', 'fluent-cart'),
+                                'depends_on'  => [
+                                    'provider' => 'manual'
+                                ]
+                            ],
+                            'test_secret_key'      => [
+                                'value'       => '',
+                                'label'       => __('Test Secret Key', 'fluent-cart'),
+                                'type'        => 'password',
+                                'placeholder' => __('sk_test_xxxxxxxxxxxxxxxxxxxxx', 'fluent-cart'),
+                                'description' => __('Used for server-to-server API calls and stored securely.', 'fluent-cart'),
+                                'depends_on'  => [
+                                    'provider' => 'manual'
+                                ]
+                            ],
+                            'test_webhook_secret'  => [
+                                'value'       => '',
+                                'label'       => __('Test Webhook Signing Secret', 'fluent-cart'),
+                                'type'        => 'password',
+                                'placeholder' => __('whsec_xxxxxxxxxxxxxxxxxxxxx', 'fluent-cart'),
+                                'description' => __('Used to verify webhook signatures from Stripe.', 'fluent-cart'),
+                                'depends_on'  => [
+                                    'provider' => 'manual'
+                                ]
+                            ],
+                        ],
                     ]
                 ]
             ],
             'provider'            => array(
-                'value' => apply_filters('fluent_cart_form_disable_stripe_connect', false, []) ? 'api_keys' : 'connect',
+                'value' => $provider,
                 'label' => __('Provider', 'fluent-cart'),
-                'type'  => 'provider'
+                'type'  => 'provider',
+                'options' => array_values(array_filter([
+                    [
+                        'label' => __('Connect Stripe', 'fluent-cart'),
+                        'value' => 'connect'
+                    ],
+                    [
+                        'label' => __('Manual setup', 'fluent-cart'),
+                        'value' => 'manual'
+                    ],
+                    $providerLocked ? [
+                        'label' => __('Defined in wp-config.php', 'fluent-cart'),
+                        'value' => 'api_keys'
+                    ] : null
+                ])),
+                'disabled' => $providerLocked,
+                'description' => $providerLocked ? __('Stripe keys are defined in wp-config.php constants. Manual entry is disabled.', 'fluent-cart') : ''
             ),
             'setup_guide'         => array(
                 'value'   => '<h4>' . __('Or Setup keys manually.', 'fluent-cart') . '</h4><hr/>',

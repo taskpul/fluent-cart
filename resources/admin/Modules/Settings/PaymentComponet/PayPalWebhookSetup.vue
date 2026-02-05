@@ -28,18 +28,22 @@ export default {
       checkingWebhook: false
     }
   },
-  props: ['mode', 'webhook_info', 'testConnect', 'liveConnect'],
+  props: ['mode', 'webhook_info', 'testConnect', 'liveConnect', 'manualReady'],
   watch: {
     testConnect() {
       this.checkWebhookStatus();
     },
     liveConnect() {
       this.checkWebhookStatus();
+    },
+    manualReady() {
+      this.checkWebhookStatus();
     }
   },
   computed: {
     isConnected() {
-      return (this.mode === 'test' && this.testConnect) || (this.mode === 'live' && this.liveConnect);
+      return (this.mode === 'test' && (this.testConnect || this.manualReady))
+          || (this.mode === 'live' && (this.liveConnect || this.manualReady));
     }
   },
   components: {

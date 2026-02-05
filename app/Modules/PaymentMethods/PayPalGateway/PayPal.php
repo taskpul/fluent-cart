@@ -274,10 +274,23 @@ class PayPal extends AbstractPaymentGateway
 
     public static function beforeSettingsUpdate($data, $oldSettings): array
     {
-        if (Arr::get($data, 'payment_mode') === 'live') {
-            $data['live_client_secret'] = Helper::encryptKey($data['live_client_secret']);
-        } else {
-            $data['test_client_secret'] = Helper::encryptKey($data['test_client_secret']);
+        $fillableKeys = [
+            'test_client_id',
+            'test_client_secret',
+            'live_client_id',
+            'live_client_secret',
+        ];
+
+        foreach ($fillableKeys as $key) {
+            if (empty(Arr::get($data, $key)) && !empty(Arr::get($oldSettings, $key))) {
+                $data[$key] = Arr::get($oldSettings, $key);
+            }
+        }
+
+        foreach (['test', 'live'] as $keyMode) {
+            if (!empty(Arr::get($data, $keyMode . '_client_secret'))) {
+                $data[$keyMode . '_client_secret'] = Helper::encryptKey(Arr::get($data, $keyMode . '_client_secret'));
+            }
         }
 
         if (isset($data['define_test_keys'])) {
@@ -345,41 +358,90 @@ class PayPal extends AbstractPaymentGateway
 
     public function fields()
     {
+        $provider = $this->settings->getProviderType();
+        $providerLocked = $provider === 'api_keys';
+
         $testSchema = [
+            'test_client_id'      => [
+                'value'       => '',
+                'placeholder' => 'Client ID',
+                'required'    => true,
+                'label'       => __('Test Client ID', 'fluent-cart'),
+                'type'        => 'text',
+                'depends_on'  => [
+                    'provider' => 'manual'
+                ],
+            ],
+            'test_client_secret'  => [
+                'value'       => '',
+                'placeholder' => 'Client Secret',
+                'required'    => true,
+                'label'       => __('Test Client Secret', 'fluent-cart'),
+                'type'        => 'password',
+                'depends_on'  => [
+                    'provider' => 'manual'
+                ],
+            ],
             'webhook_instruction' => [
-                'value' => Webhook::webhookInstruction(),
-                'label' => __('Webhook Setup', 'fluent-cart'),
-                'type'  => 'html_attr'
+                'value'      => Webhook::webhookInstruction(),
+                'label'      => __('Webhook Setup', 'fluent-cart'),
+                'type'       => 'html_attr',
+                'depends_on' => [
+                    'provider' => ['manual', 'api_keys']
+                ]
             ],
             'test_webhook_id'     => [
                 'value'       => '',
                 'placeholder' => 'Webhook ID',
                 'required'    => true,
                 'label'       => __('Test Webhook ID (Copy the webhook id and paste bellow)', 'fluent-cart'),
-                'type'        => 'text'
+                'type'        => 'text',
+                'depends_on'  => [
+                    'provider' => ['manual', 'api_keys']
+                ]
             ],
         ];
 
         $liveSchema = [
+            'live_client_id'      => [
+                'value'       => '',
+                'placeholder' => 'Client ID',
+                'required'    => true,
+                'label'       => __('Live Client ID', 'fluent-cart'),
+                'type'        => 'text',
+                'depends_on'  => [
+                    'provider' => 'manual'
+                ],
+            ],
+            'live_client_secret'  => [
+                'value'       => '',
+                'placeholder' => 'Client Secret',
+                'required'    => true,
+                'label'       => __('Live Client Secret', 'fluent-cart'),
+                'type'        => 'password',
+                'depends_on'  => [
+                    'provider' => 'manual'
+                ],
+            ],
             'webhook_instruction' => [
-                'value' => Webhook::webhookInstruction(),
-                'label' => __('Webhook Setup', 'fluent-cart'),
-                'type'  => 'html_attr'
+                'value'      => Webhook::webhookInstruction(),
+                'label'      => __('Webhook Setup', 'fluent-cart'),
+                'type'       => 'html_attr',
+                'depends_on' => [
+                    'provider' => ['manual', 'api_keys']
+                ]
             ],
             'live_webhook_id'     => [
                 'value'       => '',
                 'placeholder' => 'Webhook ID',
                 'required'    => true,
                 'label'       => __('Live Webhook ID (Copy the webhook id and paste bellow)', 'fluent-cart'),
-                'type'        => 'text'
+                'type'        => 'text',
+                'depends_on'  => [
+                    'provider' => ['manual', 'api_keys']
+                ]
             ],
         ];
-
-        // if not defined property then no need to show webhook instruction
-        if ($this->settings->getProviderType() !== 'api_keys') {
-            $testSchema = [];
-            $liveSchema = [];
-        }
 
         $payPalFields = array(
             'notice'            => [
@@ -405,9 +467,25 @@ class PayPal extends AbstractPaymentGateway
                 ]
             ],
             'provider'          => array(
-                'value' => $this->settings->getProviderType(),
+                'value' => $provider,
                 'label' => __('Provider', 'fluent-cart'),
-                'type'  => 'provider'
+                'type'  => 'provider',
+                'options' => array_values(array_filter([
+                    [
+                        'label' => __('Connect PayPal', 'fluent-cart'),
+                        'value' => 'connect'
+                    ],
+                    [
+                        'label' => __('Manual setup', 'fluent-cart'),
+                        'value' => 'manual'
+                    ],
+                    $providerLocked ? [
+                        'label' => __('Defined in wp-config.php', 'fluent-cart'),
+                        'value' => 'api_keys'
+                    ] : null
+                ])),
+                'disabled' => $providerLocked,
+                'description' => $providerLocked ? __('PayPal keys are defined in wp-config.php constants. Manual entry is disabled.', 'fluent-cart') : ''
             ),
             'webhook_info_test' => array(
                 'info' => $this->getWebhookInfo('test'),
@@ -441,13 +519,17 @@ class PayPal extends AbstractPaymentGateway
         $mode = Arr::get($data, 'payment_mode', 'test');
         $provider = Arr::get($data, 'provider', 'connect');
 
-        if ($provider === 'api_keys') {
+        if ($provider === 'api_keys' || $provider === 'manual') {
             if ($mode === 'live') {
                 $clientId = defined('FCT_PAYPAL_LIVE_PUBLIC_KEY') ? FCT_PAYPAL_LIVE_PUBLIC_KEY : Arr::get($data, 'live_client_id');
                 $clientSecret = defined('FCT_PAYPAL_LIVE_SECRET_KEY') ? FCT_PAYPAL_LIVE_SECRET_KEY : Arr::get($data, 'live_client_secret');
             } else {
                 $clientId = defined('FCT_PAYPAL_TEST_PUBLIC_KEY') ? FCT_PAYPAL_TEST_PUBLIC_KEY : Arr::get($data, 'test_client_id');
                 $clientSecret = defined('FCT_PAYPAL_TEST_SECRET_KEY') ? FCT_PAYPAL_TEST_SECRET_KEY : Arr::get($data, 'test_client_secret');
+            }
+
+            if ($clientSecret && Helper::isValueEncrypted($clientSecret)) {
+                $clientSecret = Helper::decryptKey($clientSecret);
             }
 
             return static::validateApiCredentials($clientId, $clientSecret, $mode);

@@ -48,6 +48,20 @@ const currentMode = computed(() => {
   return props.settings?.payment_mode === 'test' ? 'test' : 'live';
 });
 
+const shouldRenderField = (field) => {
+  if (!field?.depends_on) {
+    return true;
+  }
+
+  return Object.entries(field.depends_on).every(([key, expected]) => {
+    const actualValue = props.settings?.[key];
+    if (Array.isArray(expected)) {
+      return expected.includes(actualValue);
+    }
+    return actualValue === expected;
+  });
+};
+
 const getConnectConfig = () => {
   fetching_connect.value = true;
   selfRef.$get('settings/payment-methods/connect/info', {
@@ -201,7 +215,7 @@ onUnmounted(() => {
 <template>
 
   <div :class="currentMode === 'test' ? 'fct_test_mode' : 'fct_live_mode'" class="grid grid-cols-1 gap-4">
-    <div class="fct-setting-row fct-row" v-for="(field, index) in fields" :key="index">
+    <div class="fct-setting-row fct-row" v-for="(field, index) in fields" :key="index" v-if="shouldRenderField(field)">
       <div class="fct-col" v-if="field.type === 'notice'">
         <p v-html="field.value"></p>
       </div>
@@ -209,7 +223,30 @@ onUnmounted(() => {
         <h1 class="font-bold p-6 mt-6 text-center bg-gray-200">{{ translate('Upcoming') }}</h1>
       </div>
       <div class="fct-col" v-if="field.type === 'provider'">
-        <template v-if="field.value == 'connect'">
+        <p class="setting-label">
+          {{ field.label }}
+          <el-tooltip placement="top-start" v-if="field.tooltip"
+                      popper-class="fct-tooltip">
+            <template #content>
+              <p v-html="field.tooltip"></p>
+            </template>
+            <el-icon>
+              <InfoFilled/>
+            </el-icon>
+          </el-tooltip>
+        </p>
+        <el-radio-group v-model="settings[index]" :disabled="field.disabled">
+          <el-radio
+              v-for="(opt, ind) in field.options || []"
+              :key="ind"
+              :label="opt.value || opt"
+              :value="opt.value || opt"
+          >
+            {{ opt.label || opt }}
+          </el-radio>
+        </el-radio-group>
+        <p v-if="field.description" class="fct-settings-description">{{ field.description }}</p>
+        <template v-if="settings[index] === 'connect'">
           <template v-if="settings.payment_mode == 'test'">
             <el-skeleton :loading="fetching_connect" animated>
               <template #template>
@@ -245,6 +282,15 @@ onUnmounted(() => {
           <p class="text-red-700">{{ errors?.error }}</p>
           <!-- <ErrorView field="connect" :errors="errors" /> -->
         </template>
+        <div v-else-if="settings[index] === 'manual'">
+          <ContentCard :title="translate('Manual setup selected')">
+            <div class="flex items-center justify-between">
+              <div>
+                <b>{{ translate('Enter your API credentials below to activate the gateway.') }}</b>
+              </div>
+            </div>
+          </ContentCard>
+        </div>
         <div v-else>
           <div v-if="checkProviderType">
             <div>
@@ -357,6 +403,7 @@ onUnmounted(() => {
           <PayPalWebhookSetup
               :testConnect="test_account"
               :liveConnect="live_account"
+              :manualReady="settings?.provider === 'manual' && !!settings?.[`${field.mode}_client_id`] && !!settings?.[`${field.mode}_client_secret`]"
               :webhook_info="field.info"
               @reload_settings="getConnectConfig()"
               :mode="field?.mode"/>
