@@ -176,6 +176,7 @@ export default class Paginator {
 
     loadData(clearContainerAfterDataLoaded = false) {
         const noResultElement = this.container.querySelector('[data-fluent-cart-shop-no-result-found]');
+        this.clearError();
         return new Promise((resolve, reject) => {
             if (!this.shouldLoadData() && !this.applyingFilter) {
                 resolve('');
@@ -280,7 +281,6 @@ export default class Paginator {
     }
 
     addSkeletonLoader(event = null) {
-        return;
         if (event !== "onChangePageSize" && event !== "onPageScroll") {
             const items = this.productGridParentDiv.querySelectorAll('.fluent-cart-shop-app-product-single-col .fluent-cart-shop-app-single-product');
             items.forEach(item => {
@@ -297,6 +297,33 @@ export default class Paginator {
             loaderContainer.appendChild(loaderSpan);
 
             this.productGridParentDiv.appendChild(loaderContainer);
+        }
+    }
+
+    showError(message = null) {
+        const errorMessage = message || 'Unable to load products right now. Please try again shortly.';
+        const existing = this.container.querySelector('[data-fluent-cart-shop-error]');
+        if (existing) {
+            existing.textContent = errorMessage;
+            return;
+        }
+        const errorEl = document.createElement('div');
+        errorEl.className = 'fct-shop-error';
+        errorEl.setAttribute('data-fluent-cart-shop-error', '');
+        errorEl.setAttribute('role', 'alert');
+        errorEl.textContent = errorMessage;
+
+        if (this.productList) {
+            this.productList.insertAdjacentElement('beforebegin', errorEl);
+        } else {
+            this.container.appendChild(errorEl);
+        }
+    }
+
+    clearError() {
+        const existing = this.container.querySelector('[data-fluent-cart-shop-error]');
+        if (existing) {
+            existing.remove();
         }
     }
 

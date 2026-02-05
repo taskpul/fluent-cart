@@ -134,7 +134,9 @@ export default class LengthAwarePaginator extends Paginator {
     }
 
     onDataLoadError(errors) {
-        console.log(errors);
+        console.error(errors);
+        const message = errors?.message || errors?.response?.data?.message;
+        this.showError(message);
     }
 
     onApiCallFinished() {

@@ -52,6 +52,17 @@
   white-space: nowrap;
   border-width: 0;
 }
+.fluent-cart-shop-app-wrapper,
+.fct-products-wrapper {
+  --fct-primary-text-color: var(--color-dark, #18181C);
+  --fct-secondary-text-color: #52525b;
+  --fct-primary-bg-color: var(--color-primary, #2C7FFF);
+  --fct-secondary-bg-color: var(--color-light, #F4F4F5);
+  --fct-border-color: #e4e4e7;
+  --fct-divider-color: #e4e4e7;
+  --fct-btn-bg-color: var(--color-primary, #2C7FFF);
+  --fct-btn-text-color: #ffffff;
+}
 .wp-block-fluent-cart-products {
   @apply w-full block;
 }
@@ -67,11 +78,11 @@
   }
 
   .fluent-cart-shop-app-product-skeleton-loader {
-    @apply rounded p-4 m-0 absolute w-full h-full top-0 left-0;
+    @apply rounded-xl p-4 m-0 absolute w-full h-full top-0 left-0;
     animation: shimmer 2s infinite;
     background: linear-gradient(90deg, #f1f1f1 25%, #e1e1e1 50%, #f1f1f1 75%);
     background-size: 200% 100%;
-    z-index: 99999;
+    z-index: 2;
   }
 
   @keyframes shimmer {
@@ -135,7 +146,7 @@
 }
 
 .fct-products-wrapper-inner {
-  @apply flex lg:gap-7.5;
+  @apply flex flex-col lg:grid lg:gap-7.5;
   .fluent-cart-shop-app-view-switcher-wrap {
     grid-column: span 5 / span 5;
   }
@@ -150,43 +161,15 @@
         grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
         @media (min-width: 600px) {
           .fct-product-card {
-            grid-template-areas:
-            "image title"
-            "image excerpt"
-            "image price"
-            "image button";
-            @apply grid grid-cols-[250px_1fr] grid-rows-[auto_auto_1fr] gap-x-4 gap-y-0 items-start pb-0 pr-2.5;
-            .fct-product-card-image-wrap,
-            .fct-product-image-link {
-              grid-area: image;
-              @apply relative max-w-[250px] aspect-square;
-              img {
-                @apply rounded-bl rounded-tr-none;
-              }
+            @apply flex flex-col md:flex-row md:items-stretch md:gap-6;
+            .fct-product-card-media {
+              @apply md:w-[220px] md:flex-shrink-0;
             }
-            .fct-product-image-wrap {
-              grid-area: image;
-              @apply relative max-w-[250px] aspect-square;
+            .fct-product-card-body {
+              @apply md:flex-1 md:py-5;
             }
-            .fct-product-card-title {
-              grid-area: title;
-              @apply pt-1.5 pb-1 px-0 my-0 mr-0 ml-auto w-full max-w-[700px] text-right;
-              a {
-                overflow: inherit !important;
-                white-space: pre-wrap !important;
-              }
-            }
-            .fct-product-card-prices {
-              grid-area: price;
-              @apply py-1 px-0 ml-auto;
-            }
-            button {
-              grid-area: button;
-              @apply mt-auto mr-2 self-end justify-self-end ml-auto mb-2 min-w-[160px] w-auto;
-            }
-            .fct-product-card-excerpt {
-              grid-area: excerpt;
-              @apply block ml-auto pr-2 pl-0;
+            .fct-product-card-actions {
+              @apply md:w-[200px] md:px-4 md:pb-4 md:justify-center;
             }
           }
         }
@@ -284,6 +267,20 @@
     }
   }
 }
+
+.fluent-cart-shop-no-result-found {
+  @apply col-span-full rounded-xl border border-solid border-[var(--fct-shop-border-color)] bg-white px-6 py-8 text-center text-[var(--fct-shop-secondary-text-color)];
+  p {
+    @apply m-0 text-sm;
+  }
+  p + p {
+    @apply mt-2;
+  }
+}
+
+.fct-shop-error {
+  @apply col-span-full rounded-xl border border-solid border-[var(--fct-shop-border-color)] bg-white px-6 py-5 text-sm text-[var(--fct-shop-primary-text-color)];
+}
 .fct-shop-reset-filter-button{
   @apply flex items-center justify-center h-[36px] w-[36px] p-0 rounded bg-[var(--fct-shop-secondary-bg-color)] border-[1px] border-solid border-[var(--fct-shop-border-color)] text-system-dark hover:bg-[var(--fct-shop-secondary-bg-color)] hover:border-[var(--fct-shop-border-color)] hover:text-system-dark;
 }
@@ -334,7 +331,8 @@
 
 .entry-content {
   .fluent-cart-shop-app-wrapper {
-    min-width: min(1200px, 100%);
+    @apply w-full;
+    max-width: 100%;
   }
 }
 
@@ -354,7 +352,7 @@
 }
 
 .fct-shop-view-switcher-wrap {
-  @apply flex justify-end gap-2.5 @[768px]/shop-app:justify-end mb-2 items-center;
+  @apply flex flex-wrap justify-start gap-2.5 @[768px]/shop-app:justify-end items-center;
 }
 
 .fct-shop-view-switcher {
@@ -424,17 +422,17 @@
 
 
 .fluent-cart-shop-app-no-products {
-  @apply bg-white col-span-full flex items-center justify-center flex-col rounded-xs;
+  @apply bg-white col-span-full flex items-center justify-center flex-col rounded-xl border border-solid border-[var(--fct-shop-border-color)] px-6 py-10 text-center;
   h2 {
-    @apply text-[30px] font-semibold mb-2.5 mt-0;
+    @apply text-[26px] font-semibold mb-2.5 mt-0 text-[var(--fct-shop-primary-text-color)];
   }
 
   p {
-    @apply mb-5;
+    @apply mb-5 text-sm text-[var(--fct-shop-secondary-text-color)];
   }
 
   img {
-    @apply w-[400px] h-[250px] object-cover;
+    @apply w-[360px] h-[220px] object-cover;
   }
   .fct-shop-reset-filter-button{
     @apply px-4 w-auto rounded h-9;
@@ -449,6 +447,46 @@
   }
 
   @apply w-full flex-shrink-0 grid grid-cols-1 gap-6 @container/shop-app;
+}
+
+.fct-shop-page-container {
+  margin-inline: auto;
+  max-width: var(--wp--style--global--wide-size, 1280px);
+  padding-inline: 1.5rem;
+  padding-top: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .fct-shop-page-container {
+    padding-inline: 2rem;
+    padding-top: 2.5rem;
+  }
+}
+
+.fct-shop-page-header {
+  @apply flex flex-col gap-4 border-b border-solid border-[var(--fct-shop-divider-color)] pb-5 mb-6;
+}
+
+.fct-shop-page-heading {
+  @apply flex flex-col gap-2;
+}
+
+.fct-shop-page-title {
+  @apply text-[32px] font-semibold text-[var(--fct-shop-primary-text-color)] m-0;
+}
+
+.fct-shop-page-subtitle {
+  @apply text-sm text-[var(--fct-shop-secondary-text-color)] m-0 max-w-[520px];
+}
+
+.fct-shop-page-controls {
+  @apply flex flex-wrap items-center justify-start gap-3;
+}
+
+.fct-shop-page-controls {
+  .fct-shop-view-switcher-wrap {
+    @apply mb-0;
+  }
 }
 
 /*======= filter ========*/
