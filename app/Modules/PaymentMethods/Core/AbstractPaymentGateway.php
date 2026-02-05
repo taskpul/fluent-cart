@@ -143,7 +143,6 @@ abstract class AbstractPaymentGateway implements PaymentGatewayInterface
 
         $settings = static::beforeSettingsUpdate($settings, $oldSettings);
 //        unset($settings['payment_mode']);
-        unset($settings['provider']);
         fluent_cart_update_option($this->settings->methodHandler, $settings);
 
         return $settings;
