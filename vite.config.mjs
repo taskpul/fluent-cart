@@ -85,6 +85,7 @@ const inputs = [
     // Shop App/Product Page
     "resources/public/product-page/ShopApp.js",
     "resources/public/product-page/style/shop-app.scss",
+    "resources/public/product-page/style/shop-ui.css",
     // Order-Receipt
     "resources/public/print/Print.js",
     // SearchBar App

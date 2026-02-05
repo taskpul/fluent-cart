@@ -153,6 +153,7 @@ class AssetLoader
             return;
         }
         $isLoaded = true;
+        $pageType = TemplateService::getCurrentFcPageType();
         static::loadProductCardAssets();
         $app = App::getInstance();
         $slug = $app->config->get('app.slug');
@@ -181,6 +182,12 @@ class AssetLoader
             $slug . '-fluentcart-product-page-css',
             'public/product-page/style/shop-app.scss',
         );
+        if ($pageType === 'shop') {
+            Vite::enqueueStyle(
+                $slug . '-fluentcart-shop-ui',
+                'public/product-page/style/shop-ui.css'
+            );
+        }
         Vite::enqueueStaticStyle(
             $slug . '-fluentcart-product-filter-slider-css',
             'public/lib/nouislider/nouislider-15.7.1.css',

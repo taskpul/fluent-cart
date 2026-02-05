@@ -181,33 +181,37 @@ class ShopAppRenderer
             'data-default-filters'                   => wp_json_encode($this->defaultFilters)
         ];
         ?>
-        <div class="fct-products-wrapper" data-fluent-cart-shop-app data-fluent-cart-product-wrapper role="main" aria-label="<?php esc_attr_e('Products', 'fluent-cart'); ?>">
-            <?php $this->renderViewSwitcher(); ?>
-            <div <?php RenderHelper::renderAtts($wrapperAttributes); ?>>
-                <?php $this->renderFilter($renderer); ?>
+        <section class="wm-fc-shop" aria-label="<?php esc_attr_e('Shop', 'fluent-cart'); ?>">
+            <div class="wm-fc-shop__container container">
+                <div class="fct-products-wrapper wm-fc-shop__app" data-fluent-cart-shop-app data-fluent-cart-product-wrapper role="main" aria-label="<?php esc_attr_e('Products', 'fluent-cart'); ?>">
+                    <?php $this->renderToolbar(); ?>
+                    <div <?php RenderHelper::renderAtts($wrapperAttributes); ?>>
+                        <?php $this->renderFilter($renderer); ?>
 
-                <div class="fct-products-container grid-columns-<?php echo esc_attr($this->productBoxGridSize); ?>"
-                     data-fluent-cart-shop-app-product-list
-                     role="list"
-                     aria-label="<?php esc_attr_e('Product list', 'fluent-cart'); ?>"
-                >
+                        <div class="fct-products-container wm-fc-shop__grid grid-columns-<?php echo esc_attr($this->productBoxGridSize); ?>"
+                             data-fluent-cart-shop-app-product-list
+                             role="list"
+                             aria-label="<?php esc_attr_e('Product list', 'fluent-cart'); ?>"
+                        >
+                            <?php
+                            if ($this->products->count() !== 0) {
+                                $this->renderProduct();
+                            } else {
+                                ProductRenderer::renderNoProductFound();
+                            }
+                            ?>
+                        </div>
+                    </div>
+
                     <?php
-                    if ($this->products->count() !== 0) {
-                        $this->renderProduct();
-                    } else {
-                        ProductRenderer::renderNoProductFound();
+                    if ($this->paginator === 'numbers') {
+                        $this->renderPaginator();
                     }
                     ?>
+
                 </div>
             </div>
-
-            <?php
-            if ($this->paginator === 'numbers') {
-                $this->renderPaginator();
-            }
-            ?>
-
-        </div>
+        </section>
         <?php
     }
 
@@ -258,23 +262,71 @@ class ShopAppRenderer
             </button>
         </div>
 
-        <?php if ($this->isFilterEnabled) { ?>
+        <?php
+    }
+
+    public function renderToolbar()
+    {
+        ?>
+        <div class="wm-fc-shop__toolbar" role="region" aria-label="<?php esc_attr_e('Shop toolbar', 'fluent-cart'); ?>">
+            <div class="wm-fc-shop__toolbar-left">
+                <?php $this->renderToolbarResults(); ?>
+            </div>
+            <div class="wm-fc-shop__toolbar-right">
+                <?php $this->renderViewSwitcherButton(); ?>
+                <?php $this->renderSortByFilter(); ?>
+                <?php $this->renderFilterToggleButton(); ?>
+            </div>
+        </div>
+        <?php
+    }
+
+    public function renderToolbarResults()
+    {
+        $total = $this->total;
+        $currentPage = $this->products->currentPage();
+        $from = $total ? ($currentPage - 1) * $this->per_page + 1 : 0;
+        $to = $total ? min($total, $currentPage * $this->per_page) : 0;
+        ?>
+        <div class="wm-fc-shop__results"
+             role="status"
+             aria-live="polite"
+             aria-atomic="true">
+            <?php
+            printf(
+            /* translators: 1: starting item number, 2: ending item number, 3: total number of items */
+                esc_html__('Showing %1$s to %2$s of %3$s Items', 'fluent-cart'),
+                '<span class="fct-shop-paginator-from" data-fluent-cart-shop-app-paginator-info-pagination-from="">' . esc_html($from) . '</span>',
+                '<span class="fct-shop-paginator-to" data-fluent-cart-shop-app-paginator-info-pagination-to="">' . esc_html($to) . '</span>',
+                '<span class="fct-shop-paginator-total" data-fluent-cart-shop-app-paginator-info-pagination-total="">' . esc_html($total) . '</span>'
+            );
+            ?>
+        </div>
+        <?php
+    }
+
+    public function renderFilterToggleButton()
+    {
+        if (!$this->isFilterEnabled) {
+            return;
+        }
+        ?>
         <button type="button"
                 data-fluent-cart-shop-app-filter-toggle-button=""
-                class="fct-shop-filter-toggle-button hide" title="Toggle List">
+                class="fct-shop-filter-toggle-button hide"
+                title="<?php echo esc_attr__('Toggle filters', 'fluent-cart'); ?>">
             <span><?php echo esc_html__('Filter', 'fluent-cart'); ?></span>
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
                 <path
                         d="M2.5 4C1.67157 4 1 3.32843 1 2.5C1 1.67157 1.67157 1 2.5 1C3.32843 1 4 1.67157 4 2.5C4 3.32843 3.32843 4 2.5 4Z"
-                        stroke="#2F3448" stroke-width="1.2"></path>
+                        stroke="currentColor" stroke-width="1.2"></path>
                 <path
                         d="M9.5 11C10.3284 11 11 10.3284 11 9.5C11 8.67157 10.3284 8 9.5 8C8.67157 8 8 8.67157 8 9.5C8 10.3284 8.67157 11 9.5 11Z"
-                        stroke="#2F3448" stroke-width="1.2"></path>
-                <path d="M4 2.5L11 2.5" stroke="#2F3448" stroke-width="1.2" stroke-linecap="round"></path>
-                <path d="M8 9.5L1 9.5" stroke="#2F3448" stroke-width="1.2" stroke-linecap="round"></path>
+                        stroke="currentColor" stroke-width="1.2"></path>
+                <path d="M4 2.5L11 2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"></path>
+                <path d="M8 9.5L1 9.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"></path>
             </svg>
         </button>
-    <?php } ?>
         <?php
     }
 

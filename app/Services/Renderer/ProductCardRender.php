@@ -48,18 +48,37 @@ class ProductCardRender
 
         ?>
         <article data-fluent-cart-shop-app-single-product data-fct-product-card=""
-                 class="fct-product-card"
+                 class="fct-product-card wm-fc-product-card"
                 <?php echo esc_attr($cursor); ?>
                 <?php echo esc_attr($cardWidth); ?>
                  aria-label="<?php echo esc_attr(sprintf(
                  /* translators: %s: product title */
                          __('%s product card', 'fluent-cart'), $this->product->post_title));
                  ?>">
-            <?php $this->renderProductImage(); ?>
-            <?php $this->renderTitle(); ?>
-            <?php $this->renderExcerpt(); ?>
-            <?php $this->renderPrices(); ?>
-            <?php $this->showBuyButton(); ?>
+            <div class="wm-fc-card__media">
+                <?php $this->renderProductImage(); ?>
+            </div>
+            <div class="wm-fc-card__body">
+                <?php $this->renderTitle(); ?>
+                <?php $this->renderExcerpt(); ?>
+            </div>
+            <div class="wm-fc-card__footer">
+                <?php $this->renderPrices('class="fct-product-card-prices wm-fc-card__prices"'); ?>
+                <div class="wm-fc-card__actions">
+                    <?php $this->showBuyButton('class="wm-fc-button wm-fc-button--primary"'); ?>
+                    <?php if (!empty($this->viewUrl)) : ?>
+                        <a class="wm-fc-button wm-fc-button--ghost"
+                           href="<?php echo esc_url($this->viewUrl); ?>"
+                           data-fluent-cart-product-link
+                           data-product-id="<?php echo esc_attr($this->product->ID); ?>"
+                           aria-label="<?php echo esc_attr(sprintf(
+                           /* translators: %s: product title */
+                                   __('View details for %s', 'fluent-cart'), $this->product->post_title)); ?>">
+                            <?php echo esc_html__('View details', 'fluent-cart'); ?>
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div>
         </article>
         <?php
     }
@@ -141,7 +160,7 @@ class ProductCardRender
            aria-label="<?php echo esc_attr(sprintf(
            /* translators: %s: product title */
                    __('View %s product image', 'fluent-cart'), $this->product->post_title)); ?>">
-            <img class="fct-product-card-image"
+            <img class="fct-product-card-image<?php echo $isPlaceholder ? ' is-placeholder' : ''; ?>"
                  data-fluent-cart-shop-app-single-product-image
                  src="<?php echo esc_url($image); ?>"
                  alt="<?php echo esc_attr($altText); ?>"
