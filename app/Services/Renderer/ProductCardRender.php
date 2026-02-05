@@ -55,19 +55,11 @@ class ProductCardRender
                  /* translators: %s: product title */
                          __('%s product card', 'fluent-cart'), $this->product->post_title));
                  ?>">
-            <div class="fct-product-card-media">
-                <?php $this->renderProductImage(); ?>
-                <?php $this->renderCategoryBadge(); ?>
-            </div>
-            <div class="fct-product-card-body">
-                <?php $this->renderTitle(); ?>
-                <?php $this->renderExcerpt(); ?>
-                <?php $this->renderPrices(); ?>
-            </div>
-            <div class="fct-product-card-actions">
-                <?php $this->showBuyButton('class="fct-product-card-primary"'); ?>
-                <?php $this->renderViewLink(); ?>
-            </div>
+            <?php $this->renderProductImage(); ?>
+            <?php $this->renderTitle(); ?>
+            <?php $this->renderExcerpt(); ?>
+            <?php $this->renderPrices(); ?>
+            <?php $this->showBuyButton(); ?>
         </article>
         <?php
     }
@@ -163,41 +155,6 @@ class ProductCardRender
                 'product'       => $this->product,
                 'scope'         => 'product_card'
         ]);
-    }
-
-    public function renderCategoryBadge()
-    {
-        $categories = $this->product->categories;
-
-        if (empty($categories) || is_wp_error($categories)) {
-            return;
-        }
-
-        $category = $categories[0];
-        if (!isset($category->name)) {
-            return;
-        }
-
-        echo sprintf(
-            '<span class="fct-product-card-badge">%s</span>',
-            esc_html($category->name)
-        );
-    }
-
-    public function renderViewLink()
-    {
-        $label = sprintf(
-            /* translators: %s: product title */
-            __('View details for %s', 'fluent-cart'),
-            $this->product->post_title
-        );
-
-        echo sprintf(
-            '<a class="fct-product-card-secondary" href="%1$s" aria-label="%2$s">%3$s</a>',
-            esc_url($this->viewUrl),
-            esc_attr($label),
-            esc_html__('View Details', 'fluent-cart')
-        );
     }
 
     public function renderPrices($wrapper_attributes = '')
