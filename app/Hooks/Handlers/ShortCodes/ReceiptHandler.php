@@ -113,6 +113,8 @@ class ReceiptHandler
 
         ob_start();
         $defaultBannerImage = Vite::getAssetUrl('images/email-template/email-banner.png');
+        $footerContent = "<div style='padding: 15px; text-align: center; font-size: 16px; color: #2F3448;'>Powered by <a href='https://mattercall.com' style='color: #017EF3; text-decoration: none;'>" . __('MatterCall Inc', 'fluent-cart') . "</a></div>";
+        $showFooter = (!App::isProActive() || $isEmailFooter == 'yes') && $isReceipt;
 //
 //        $templatePath = !$isReceipt ? 'invoice.thank_you' : 'invoice.receipt_slip';
 //        App::make('view')->render($templatePath, [
@@ -127,7 +129,8 @@ class ReceiptHandler
             'vat_tax_id'           => $vatTaxId,
             'order_operation'      => $operation,
             'is_first_time'        => $isFirstTime,
-            'default_banner_image' => $defaultBannerImage
+            'default_banner_image' => $defaultBannerImage,
+            'footer_html'          => $showFooter ? $footerContent : ''
         ];
         if ($isReceipt) {
             (new ReceiptRenderer($config))->render();
@@ -153,12 +156,6 @@ class ReceiptHandler
         $content = '';
 
         ob_start();
-
-        $footerContent = "<div style='padding: 15px; text-align: center; font-size: 16px; color: #2F3448;'>Powered by <a href='https://fluentcart.com' style='color: #017EF3; text-decoration: none;'>". __('FluentCart', 'fluent-cart') ."</a></div>";
-
-        if ((!App::isProActive() || $isEmailFooter == 'yes') && $isReceipt) {
-            $parsedContent .= $footerContent;
-        }
 
         $viewData = [
             'order'      => $order,

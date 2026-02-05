@@ -10,6 +10,7 @@ use FluentCart\App\App;
 use FluentCart\App\Helpers\AddressHelper;
 use FluentCart\App\Helpers\CartHelper;
 use FluentCart\App\Models\Cart;
+use FluentCart\App\Models\Product;
 use FluentCart\App\Services\Localization\LocalizationManager;
 use FluentCart\App\Services\URL;
 use FluentCart\Framework\Support\Arr;
@@ -554,18 +555,14 @@ class CheckoutRenderer
 
     public function renderOrderNoteField($attr_title = '')
     {
-        if (
-            !$this->requireShipping &&
-            apply_filters('fluent_cart/disable_order_notes_for_digital_products', true, [
-                'cart' => $this->cart
-            ])
-        ) {
+        $noteSettings = $this->getOrderNoteSettings();
+        if (!$noteSettings['enabled']) {
             return;
         }
 
-        $noteTitle = __('Leave a Note', 'fluent-cart');
-        if (!empty($attr_title)) {
-            $noteTitle = $attr_title;
+        $noteTitle = !empty($attr_title) ? $attr_title : __('Leave a Note', 'fluent-cart');
+        if (!empty($noteSettings['title'])) {
+            $noteTitle = $noteSettings['title'];
         }
         $fieldId = 'order_notes';
 
@@ -605,6 +602,66 @@ class CheckoutRenderer
         ]);
 
         do_action('fluent_cart/after_order_notes_field', ['cart' => $this->cart]);
+    }
+
+    protected function getOrderNoteSettings(): array
+    {
+        $cartItems = Arr::get($this->cart->cart_data, []);
+        if (empty($cartItems)) {
+            return [
+                'enabled' => false,
+                'title'   => ''
+            ];
+        }
+
+        $productIds = array_values(array_filter(array_unique(array_map(static function ($item) {
+            return Arr::get($item, 'post_id');
+        }, $cartItems))));
+
+        if (empty($productIds)) {
+            return [
+                'enabled' => false,
+                'title'   => ''
+            ];
+        }
+
+        $products = Product::query()
+            ->whereIn('ID', $productIds)
+            ->with(['detail'])
+            ->get();
+
+        $labels = [];
+        $hasEnabled = false;
+
+        foreach ($products as $product) {
+            $otherInfo = Arr::get($product->detail, 'other_info', []);
+            if (Arr::get($otherInfo, 'order_note_enabled') !== 'yes') {
+                continue;
+            }
+
+            $hasEnabled = true;
+            $label = trim((string) Arr::get($otherInfo, 'order_note_label', ''));
+            if ($label !== '') {
+                $labels[$label] = true;
+            }
+        }
+
+        if (!$hasEnabled) {
+            return [
+                'enabled' => false,
+                'title'   => ''
+            ];
+        }
+
+        $title = '';
+        if (count($labels) === 1) {
+            $title = array_key_first($labels);
+        }
+
+        return [
+            'enabled' => true,
+            'title'   => $title
+        ];
     }
 
     public function renderShippingOptions()

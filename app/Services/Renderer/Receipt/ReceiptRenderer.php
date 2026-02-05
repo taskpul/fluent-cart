@@ -56,6 +56,12 @@ class ReceiptRenderer
     public function wrapperEnd()
     {
         ?>
+        <?php
+        $footerHtml = Arr::get($this->config, 'footer_html');
+        if (!empty($footerHtml)) {
+            echo wp_kses_post($footerHtml);
+        }
+        ?>
         </div>
         </div>
         </div>
