@@ -182,22 +182,37 @@ class ShopAppRenderer
         ];
         ?>
         <div class="fct-products-wrapper" data-fluent-cart-shop-app data-fluent-cart-product-wrapper role="main" aria-label="<?php esc_attr_e('Products', 'fluent-cart'); ?>">
-            <?php $this->renderViewSwitcher(); ?>
-            <div <?php RenderHelper::renderAtts($wrapperAttributes); ?>>
-                <?php $this->renderFilter($renderer); ?>
+            <div class="fct-shop-page-container">
+                <header class="fct-shop-page-header">
+                    <div class="fct-shop-page-heading">
+                        <h1 class="fct-shop-page-title">
+                            <?php echo esc_html__('Shop', 'fluent-cart'); ?>
+                        </h1>
+                        <p class="fct-shop-page-subtitle">
+                            <?php echo esc_html__('Browse our curated collection and find your next favorite item.', 'fluent-cart'); ?>
+                        </p>
+                    </div>
+                    <div class="fct-shop-page-controls">
+                        <?php $this->renderViewSwitcher(); ?>
+                    </div>
+                </header>
 
-                <div class="fct-products-container grid-columns-<?php echo esc_attr($this->productBoxGridSize); ?>"
-                     data-fluent-cart-shop-app-product-list
-                     role="list"
-                     aria-label="<?php esc_attr_e('Product list', 'fluent-cart'); ?>"
-                >
-                    <?php
-                    if ($this->products->count() !== 0) {
-                        $this->renderProduct();
-                    } else {
-                        ProductRenderer::renderNoProductFound();
-                    }
-                    ?>
+                <div <?php RenderHelper::renderAtts($wrapperAttributes); ?>>
+                    <?php $this->renderFilter($renderer); ?>
+
+                    <div class="fct-products-container grid-columns-<?php echo esc_attr($this->productBoxGridSize); ?>"
+                         data-fluent-cart-shop-app-product-list
+                         role="list"
+                         aria-label="<?php esc_attr_e('Product list', 'fluent-cart'); ?>"
+                    >
+                        <?php
+                        if ($this->products->count() !== 0) {
+                            $this->renderProduct();
+                        } else {
+                            ProductRenderer::renderNoProductFound();
+                        }
+                        ?>
+                    </div>
                 </div>
             </div>
 

@@ -154,6 +154,8 @@ export default class ScrollPaginator extends Paginator {
 
     onDataLoadError(errors) {
         console.error(errors);
+        const message = errors?.message || errors?.response?.data?.message;
+        this.showError(message);
     }
 
     onApiCallFinished() {
