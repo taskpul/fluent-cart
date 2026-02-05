@@ -11,87 +11,54 @@
   // button
   --fct-card-btn-bg-color: var(--fct-btn-bg-color, #253241);
   --fct-card-btn-text-color: var(--fct-btn-text-color, #ffffff);
-  --fct-card-ring-color: var(--fct-card-btn-bg-color);
-  --fct-card-muted-bg: #f8fafc;
 
   --fct-heading-color: var(--fct-primary-text-color, #2F3448);
 }
 
 /* ==== fct-product-card ==== */
 .fct-product-card {
-  @apply relative h-full bg-[var(--fct-card-bg)] flex flex-col border border-solid rounded-xl border-[var(--fct-card-border-color)] transition-all duration-200 shadow-sm hover:shadow-md;
-
+  @apply relative h-full p-1 bg-[var(--fct-card-bg)] grid grid-cols-1 border border-solid rounded border-[var(--fct-card-border-color)] transition-all duration-200 @[540px]/product-grid:group-[.list]:grid-cols-5;
+  
   del {
     opacity: .5;
   }
 
   h1,h2,h3,h4,h5,h6 {
-    @apply mt-0 text-[var(--fct-card-primary-text-color)] text-base font-semibold mb-1;
+    @apply mt-0 text-[var(--fct-card-primary-text-color)] px-3 pt-3 text-base font-medium mb-1;
 
     a {
-      @apply text-[var(--fct-card-primary-text-color)] no-underline;
+      @apply text-[var(--fct-card-primary-text-color)] no-underline hover:underline focus:underline;
     }
   }
 
-  .fct-product-card-media {
-    @apply relative overflow-hidden rounded-t-xl bg-[var(--fct-card-muted-bg)];
-  }
-
   .fct-product-card-image-wrap {
-    @apply block aspect-square overflow-hidden;
+    @apply -mx-1 -mt-1 aspect-square;
   }
 
   img {
-    @apply object-cover aspect-square w-full h-full transition-transform duration-300;
-  }
-
-  &:hover img {
-    transform: scale(1.03);
-  }
-
-  .fct-product-card-badge {
-    @apply absolute top-3 left-3 rounded-full bg-[var(--fct-card-btn-bg-color)] px-2.5 py-1 text-xs font-semibold text-[var(--fct-card-btn-text-color)] shadow-sm;
+    @apply rounded-tl-[7px] rounded-tr-[7px] object-cover aspect-square w-full h-full @[390px]/product-grid:group-[.list]:aspect-square group-[.list]:block group-[.list]:h-full;
+    &:hover {
+      opacity: 0.9;
+    }
   }
 
   .fct-product-card-title {
-    @apply text-[var(--fct-card-primary-text-color)];
     overflow-wrap: anywhere;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
   }
 
   .fct-product-card-prices {
-    @apply text-[var(--fct-card-primary-text-color)] text-lg font-semibold;
-  }
-
-  .fct-product-card-body {
-    @apply flex flex-col gap-2 px-4 py-4;
+    @apply px-3 pb-3 text-[var(--fct-card-primary-text-color)] text-base;
   }
 
   button {
-    @apply relative inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fct-card-ring-color)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--fct-card-bg)];
-  }
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.00) 100%), var(--fct-card-btn-bg-color);
+    box-shadow: inset 0px 0.5px 0.5px 0.5px rgba(255, 255, 255, 0.1);
 
-  .fct-product-card-primary,
-  .fluent-cart-add-to-cart-button {
-    background: var(--fct-card-btn-bg-color);
-    color: var(--fct-card-btn-text-color);
-    @apply shadow-sm hover:opacity-90;
-  }
-
-  .fct-product-card-secondary {
-    @apply inline-flex w-full items-center justify-center rounded-md border border-solid border-[var(--fct-card-border-color)] px-4 py-2.5 text-sm font-medium text-[var(--fct-card-primary-text-color)] transition-colors duration-150 hover:bg-[var(--fct-card-muted-bg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fct-card-ring-color)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--fct-card-bg)];
-    background: transparent;
-  }
-
-  .fct-product-card-actions {
-    @apply mt-auto grid gap-2 px-4 pb-4;
+    @apply w-full cursor-pointer px-3 text-sm text-center leading-none rounded mt-auto min-h-10 py-3 border-0 text-[var(--fct-card-btn-text-color)] hover:bg-[var(--fct-card-btn-bg-color)] hover:text-[var(--fct-card-btn-text-color)] focus:text-[var(--fct-card-btn-text-color)] @[390px]/product-grid:group-[.list]:transition-none @[390px]/product-grid:group-[.list]:max-w-[178px];
 
     .fluent-cart-loader {
       @apply duration-300 pointer-events-none justify-center items-center rounded absolute inset-0 w-full h-full hidden;
-      background: var(--fct-card-btn-bg-color);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.00) 100%), var(--fct-card-btn-bg-color);
 
       svg {
         @apply w-5 h-5 mr-2 text-gray-200 animate-spin fill-blue-600;
@@ -106,14 +73,17 @@
     @apply m-0;
   }
   .fct-product-card-excerpt{
-    @apply text-sm text-[var(--fct-card-text-color)];
+    @apply px-3 mb-2 text-sm;
   }
+
+
 }
 
 .fct-product-view-button {
-  @apply inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--fct-card-ring-color)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--fct-card-bg)];
-  background: var(--fct-card-btn-bg-color);
-  color: var(--fct-card-btn-text-color);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.00) 100%), var(--fct-card-btn-bg-color);
+  box-shadow: inset 0px 0.5px 0.5px 0.5px rgba(255, 255, 255, 0.1);
+
+  @apply cursor-pointer px-3 text-sm text-center leading-none rounded mt-auto min-h-10 py-3 border-0 text-[var(--fct-card-btn-text-color)] hover:bg-[var(--fct-card-btn-bg-color)] hover:text-[var(--fct-card-btn-text-color)] @[390px]/product-grid:group-[.list]:transition-none @[390px]/product-grid:group-[.list]:max-w-[178px];
 
   &.group.loading {
     .fluent-cart-loader {
